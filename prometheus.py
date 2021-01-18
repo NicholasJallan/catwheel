@@ -6,7 +6,7 @@ from prometheus_client import Info
 import  RPi.GPIO as GPIO
 
 from prometheus_client import Gauge
-from datetime import datetime
+import datetime as dt
 
 import psycopg2
 
@@ -26,10 +26,11 @@ SENSOR_NUMBERS = 12
 WHEEL_RUNNING_LENGTH_TOTAL = 2 * 3.141592653589793 * WHEEL_DIAMETER
 WHEEL_RUNNING_LENGTH_SEGMENT = WHEEL_RUNNING_LENGTH_TOTAL / SENSOR_NUMBERS
 
-# var to read only one time each activation of the switch
+# var to read only one time each activation of a magnetic switch.
+# Python goes so fast that it will go through the loop many times when one switch is passing.
 isOn = False
 
-prevLastSeen = datetime.now()
+prevLastSeen = dt.datetime.now()
 
 
 c = Counter('wheel_tick', 'Tick of the wheel')
@@ -43,15 +44,21 @@ if __name__ == '__main__':
     
     g = Gauge('wheel_speed', 'Speed of the wheel')
     
+    # this variable is true when there is a running session ongoing. It stops after 3sec without any magnet tick
     isRunning = False
-    lastSeen = datetime.now()
+    lastSeen = dt.datetime.now()
 #    i = 0
 #    session = 0
     while True:
+        # this test is true when a magnet is nearby the sensor
         if (GPIO.input(18) == False):
-            
+            lastSeen = dt.datetime.now()
+            if isRunning == False:
+                # insert a 0 value prior to any new value. This will allow to have a flat line when the wheel isn't running
+                # reusing prevLastSeen variable also to avoid a very low first speed value, even if wrong.
+                prevLastSeen = lastSeen - dt.timedelta(seconds=2)
+                cur.execute('INSERT into ticker (tick_date, tick_date_long, speed) VALUES (%s, %s, %s)', (prevLastSeen, prevLastSeen.timestamp(), 0))
             isRunning = True            
-            lastSeen = datetime.now()
             if isOn == False :
 #                print('tick number ', i)
 #                i+=1
@@ -65,7 +72,7 @@ if __name__ == '__main__':
                 prevLastSeen = lastSeen
         else :
             isOn = False
-            now = datetime.now()
+            now = dt.datetime.now()
             delta = now.timestamp() - lastSeen.timestamp()
             if (delta > 3) and (isRunning==True):
 #                print('end session running ', session)
@@ -75,5 +82,5 @@ if __name__ == '__main__':
                 cur.execute('INSERT into ticker (tick_date, tick_date_long, speed) VALUES (%s, %s, %s)', (now, now.timestamp(), 0))
                 g.set(0)
                 
-        time.sleep(0.01)
+#        time.sleep(0.05)
     
