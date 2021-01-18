@@ -32,17 +32,7 @@ isOn = False
 prevLastSeen = datetime.now()
 
 
-# Create a metric to track time spent and requests made.
-#REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
-
 c = Counter('wheel_tick', 'Tick of the wheel')
-
-# Decorate function with metric.
-#@REQUEST_TIME.time()
-#def process_request(t):
-#    """A dummy function that takes some time."""
-#    time.sleep(t)    
-#    c.inc()     # Increment by 1
 
 if __name__ == '__main__':
     # Start up the server to expose the metrics.
@@ -55,16 +45,16 @@ if __name__ == '__main__':
     
     isRunning = False
     lastSeen = datetime.now()
-    i = 0
-    session = 0
+#    i = 0
+#    session = 0
     while True:
         if (GPIO.input(18) == False):
             
             isRunning = True            
             lastSeen = datetime.now()
             if isOn == False :
-                print('tick number ', i)
-                i+=1
+#                print('tick number ', i)
+#                i+=1
                 elapsed_time = lastSeen.timestamp() - prevLastSeen.timestamp()
                 speed = (WHEEL_RUNNING_LENGTH_SEGMENT*3.6) / (elapsed_time*1000)
                 g.set(speed)
@@ -78,9 +68,9 @@ if __name__ == '__main__':
             now = datetime.now()
             delta = now.timestamp() - lastSeen.timestamp()
             if (delta > 3) and (isRunning==True):
-                print('end session running ', session)
-                session = session +1
-                i = 0
+#                print('end session running ', session)
+#                session = session +1
+#                i = 0
                 isRunning = False
                 cur.execute('INSERT into ticker (tick_date, tick_date_long, speed) VALUES (%s, %s, %s)', (now, now.timestamp(), 0))
                 g.set(0)
