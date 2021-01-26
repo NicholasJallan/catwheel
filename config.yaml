@@ -1,0 +1,14 @@
+
+---
+
+cats:
+  - kira:
+      name: Kira
+      breed: Bengal
+      gender: male
+      neutralized: True
+
+wheel:
+  model: Ferris cat wheel v5
+  inner_diameter: 1200
+  sensors: 12
